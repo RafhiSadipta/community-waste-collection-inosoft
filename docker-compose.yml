@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: waste-collection-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www
+    environment:
+      DB_CONNECTION: mongodb
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: waste_collection
+    depends_on:
+      - mongo
+    networks:
+      - waste-collection
+
+  mongo:
+    image: mongo:7
+    container_name: waste-collection-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - waste-collection
+
+volumes:
+  mongo_data:
+
+networks:
+  waste-collection:
+    driver: bridge
