@@ -17,6 +17,24 @@ services:
     networks:
       - waste-collection
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: waste-collection-scheduler
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["while true; do php artisan schedule:run; sleep 60; done"]
+    volumes:
+      - .:/var/www
+    environment:
+      DB_CONNECTION: mongodb
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: waste_collection
+    depends_on:
+      - mongo
+    networks:
+      - waste-collection
+
   mongo:
     image: mongo:7
     container_name: waste-collection-mongo
