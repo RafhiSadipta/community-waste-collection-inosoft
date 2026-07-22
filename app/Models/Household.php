@@ -8,7 +8,7 @@ class Household extends Model
 {
     protected $connection = 'mongodb';
 
-    protected $collection = 'households';
+    protected $table = 'households';
 
     protected $fillable = [
         'owner_name',
