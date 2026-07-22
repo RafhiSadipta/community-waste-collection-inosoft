@@ -57,6 +57,13 @@ Seeder aman dijalankan berkali-kali — hanya mengisi data kalau collection terk
 
 Postman collection tersedia di [`postman/Community-Waste-Collection.postman_collection.json`](postman/Community-Waste-Collection.postman_collection.json) — import ke Postman untuk mencoba semua endpoint beserta contoh request/response.
 
+Struktur collection: folder **Household**, **Waste Pickup** (dengan subfolder per tipe sampah), **Payment** itu semuanya CRUD/lifecycle dasar, sedangkan folder **Business Rules** di paling akhir khusus berisi skenario yang membuktikan business rule benar-benar bekerja:
+- **Rule #1** — household diblokir bikin pickup baru selagi ada payment belum lunas, dan bisa lagi setelah lunas
+- **Rule #2** — pickup cuma bisa di-schedule dari status `pending`, dan cuma bisa di-complete dari status `scheduled`
+- **Rule #3** — payment otomatis ke-generate begitu pickup di-complete, amount sesuai tipe waste
+
+Jalankan folder secara berurutan dari atas ke bawah karena saling bergantung state.
+
 ### Endpoint yang sudah tersedia
 
 | Method | Endpoint | Keterangan |
@@ -66,8 +73,22 @@ Postman collection tersedia di [`postman/Community-Waste-Collection.postman_coll
 | GET | `/api/households/{id}` | Detail household |
 | PUT | `/api/households/{id}` | Update household |
 | DELETE | `/api/households/{id}` | Hapus household |
+| POST | `/api/pickups` | Buat waste pickup request baru (`type`: organic/plastic/paper/electronic) |
+| GET | `/api/pickups` | List pickup (filter `status`/`type`/`household_id`, paginate) |
+| PUT | `/api/pickups/{id}/schedule` | Jadwalkan pickup (electronic butuh `safety_confirmed: true` di body) |
+| PUT | `/api/pickups/{id}/complete` | Tandai pickup selesai (hanya dari status `scheduled`) |
+| PUT | `/api/pickups/{id}/cancel` | Batalkan pickup |
+| POST | `/api/payments` | Buat payment manual (`waste_id` opsional untuk link ke pickup tertentu) |
+| GET | `/api/payments` | List payment (filter `status`/`household_id`/`from`/`to`, paginate) |
+| PUT | `/api/payments/{id}/confirm` | Konfirmasi payment lunas |
 
-Endpoint Waste Pickup, Payment, dan Reporting menyusul di commit berikutnya.
+Endpoint Reporting menyusul di commit berikutnya.
+
+### Auto-cancel Waste Organic
+
+Waste `organic` yang masih `pending` (belum dijadwalkan) lebih dari **3 hari** otomatis dibatalkan sistem. Ini dijalankan oleh command `wastes:auto-cancel-organic`, dijadwalkan harian lewat Laravel Scheduler (`routes/console.php`).
+
+Di Docker, penjadwalan ini dijalankan oleh service `scheduler` terpisah di `docker-compose.yml` (loop yang manggil `php artisan schedule:run` tiap 60 detik yang sama atau setara dengan cron `* * * * *`, tanpa perlu setup cron daemon di dalam container). Otomatis jalan begitu eksekusi `docker compose up`, sehingga tidak perlu langkah manual tambahan.
 
 ## Struktur Arsitektur
 
