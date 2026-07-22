@@ -64,6 +64,11 @@ class Waste extends Model
         return null;
     }
 
+    public function confirmSafetyCheck(): void
+    {
+        // No-op by default — only meaningful for waste types that require it.
+    }
+
     public function schedule(DateTimeInterface $pickupDate): void
     {
         $this->pickup_date = $pickupDate;

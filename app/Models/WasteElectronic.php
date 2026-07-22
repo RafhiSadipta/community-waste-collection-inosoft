@@ -13,4 +13,9 @@ class WasteElectronic extends Waste
     {
         return 100000;
     }
+
+    public function confirmSafetyCheck(): void
+    {
+        $this->safety_check = true;
+    }
 }

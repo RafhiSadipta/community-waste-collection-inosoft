@@ -157,10 +157,359 @@
           }
         }
       ]
+    },
+    {
+      "name": "Waste Pickup",
+      "item": [
+        {
+          "name": "Get Existing Household (for Waste testing)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const items = json.data.items;",
+                  "pm.test('At least 1 household exists (run Household seeder if this fails)', () => pm.expect(items.length).to.be.above(0));",
+                  "if (items.length > 0) {",
+                  "    pm.collectionVariables.set('waste_test_household_id', items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/households?per_page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "households"],
+              "query": [{ "key": "per_page", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Create Pickup - Organic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('pickup_organic_id', json.data.id);",
+                  "}",
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('type is organic', () => pm.expect(pm.response.json().data.type).to.eql('organic'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"household_id\": \"{{waste_test_household_id}}\",\n  \"type\": \"organic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pickups",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups"]
+            }
+          }
+        },
+        {
+          "name": "Create Pickup - Electronic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('pickup_electronic_id', json.data.id);",
+                  "}",
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('safety_check defaults false', () => pm.expect(pm.response.json().data.safety_check).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"household_id\": \"{{waste_test_household_id}}\",\n  \"type\": \"electronic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pickups",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups"]
+            }
+          }
+        },
+        {
+          "name": "Create Pickup - Plastic (representative for Plastic/Paper)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('pickup_plastic_id', json.data.id);",
+                  "}",
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('type is plastic', () => pm.expect(pm.response.json().data.type).to.eql('plastic'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"household_id\": \"{{waste_test_household_id}}\",\n  \"type\": \"plastic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pickups",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups"]
+            }
+          }
+        },
+        {
+          "name": "Schedule Pickup - Plastic (representative for Plastic/Paper, same default behavior)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status is scheduled', () => pm.expect(pm.response.json().data.status).to.eql('scheduled'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup_date\": \"2026-07-25 09:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pickups/{{pickup_plastic_id}}/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups", "{{pickup_plastic_id}}", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "List Pickups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/pickups?status=&type=&household_id=&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups"],
+              "query": [
+                { "key": "status", "value": "" },
+                { "key": "type", "value": "" },
+                { "key": "household_id", "value": "" },
+                { "key": "per_page", "value": "15" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Schedule Pickup - Electronic WITHOUT safety confirm (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup_date\": \"2026-07-25 09:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pickups/{{pickup_electronic_id}}/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups", "{{pickup_electronic_id}}", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Schedule Pickup - Electronic WITH safety confirm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status is scheduled', () => pm.expect(pm.response.json().data.status).to.eql('scheduled'));",
+                  "pm.test('safety_check is true', () => pm.expect(pm.response.json().data.safety_check).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup_date\": \"2026-07-25 09:00:00\",\n  \"safety_confirmed\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pickups/{{pickup_electronic_id}}/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups", "{{pickup_electronic_id}}", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Schedule Pickup - Organic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status is scheduled', () => pm.expect(pm.response.json().data.status).to.eql('scheduled'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup_date\": \"2026-07-25 09:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pickups/{{pickup_organic_id}}/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups", "{{pickup_organic_id}}", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Complete Pickup - Organic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status is completed', () => pm.expect(pm.response.json().data.status).to.eql('completed'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/pickups/{{pickup_organic_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups", "{{pickup_organic_id}}", "complete"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Pickup - Electronic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status is canceled', () => pm.expect(pm.response.json().data.status).to.eql('canceled'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/pickups/{{pickup_electronic_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups", "{{pickup_electronic_id}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Complete Pickup - Not Scheduled Yet (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/pickups/{{pickup_electronic_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pickups", "{{pickup_electronic_id}}", "complete"]
+            }
+          }
+        }
+      ]
     }
   ],
   "variable": [
     { "key": "base_url", "value": "http://localhost:8000" },
-    { "key": "household_id", "value": "" }
+    { "key": "household_id", "value": "" },
+    { "key": "waste_test_household_id", "value": "" },
+    { "key": "pickup_organic_id", "value": "" },
+    { "key": "pickup_electronic_id", "value": "" },
+    { "key": "pickup_plastic_id", "value": "" }
   ]
 }
