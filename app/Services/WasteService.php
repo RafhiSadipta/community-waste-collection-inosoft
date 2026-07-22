@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\InvalidStatusTransitionException;
+use App\Exceptions\UnpaidPaymentExistsException;
 use App\Models\Waste;
 use App\Repositories\Contracts\HouseholdRepositoryInterface;
 use App\Repositories\Contracts\WasteRepositoryInterface;
@@ -15,6 +16,7 @@ class WasteService
     public function __construct(
         private readonly WasteRepositoryInterface $wastes,
         private readonly HouseholdRepositoryInterface $households,
+        private readonly PaymentService $payments,
     ) {}
 
     public function list(array $filters, int $perPage = 15): LengthAwarePaginator
@@ -35,7 +37,9 @@ class WasteService
     {
         abort_unless($this->households->find($householdId), 404, 'Household not found.');
 
-        // TODO (Checkpoint 3): Business Rule #1 — block if household has any unpaid payment.
+        if ($this->payments->hasUnpaidByHousehold($householdId)) {
+            throw new UnpaidPaymentExistsException('Household memiliki payment yang belum lunas, tidak bisa membuat pickup baru.');
+        }
 
         $waste = WasteFactory::make($type, [
             'household_id' => $householdId,
@@ -72,7 +76,7 @@ class WasteService
 
         $waste->complete();
 
-        // TODO (Checkpoint 3): Business Rule #3 — auto-generate payment record.
+        $this->payments->createFromWaste($waste);
 
         return $waste;
     }

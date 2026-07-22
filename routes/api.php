@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\HouseholdController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\WasteController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,3 +12,7 @@ Route::get('pickups', [WasteController::class, 'index']);
 Route::put('pickups/{id}/schedule', [WasteController::class, 'schedule']);
 Route::put('pickups/{id}/complete', [WasteController::class, 'complete']);
 Route::put('pickups/{id}/cancel', [WasteController::class, 'cancel']);
+
+Route::post('payments', [PaymentController::class, 'store']);
+Route::get('payments', [PaymentController::class, 'index']);
+Route::put('payments/{id}/confirm', [PaymentController::class, 'confirm']);
