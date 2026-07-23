@@ -20,7 +20,7 @@ class Payment extends Model
 
     protected $casts = [
         'payment_date' => 'datetime',
-        'amount' => 'decimal:2',
+        'amount' => 'integer',
     ];
 
     public function confirm(): void
